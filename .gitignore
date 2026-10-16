@@ -1,0 +1,38 @@
+## Visual Studio / IDEs
+.vs/
+*.suo
+*.user
+*.userprefs
+*.lock.json
+
+## Build & Publish Directories (bin/ và obj/ của tất cả các project)
+[Bb]in/
+[Oo]bj/
+project.lock.json
+artifacts/
+
+## .NET Aspire / AppHost Temporary Files
+.aspire/
+
+## Visual Studio Code
+.vscode/
+
+## Operating System Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+## Configuration & Environment (Bảo mật chuỗi kết nối Database, mật khẩu)
+appsettings.Development.json
+*.env
+.env.*
+
+## Logs & Temporary files
+*.log
+logs/
+*.tmp
+*.temp
+
+## Docker
+.docker/
+docker-compose.override.yml
