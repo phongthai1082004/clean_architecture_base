@@ -1,13 +1,10 @@
 ﻿namespace Domain.Abstractions.Entities
 {
-    public class GuidEntity : BaseEntity<Guid>
+    public abstract class GuidEntity : BaseEntity<Guid>
     {
         protected GuidEntity()
         {
-        }
-        protected GuidEntity(Guid id)
-        {
-            Id = Guid.CreateVersion7();
+            Id = Guid.NewGuid();
         }
     }
 }

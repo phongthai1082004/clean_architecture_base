@@ -1,13 +1,15 @@
 ﻿using Domain.Abstractions.Entities;
+
 namespace Domain.Entities
 {
     public class OutboxMessage : GuidEntity
     {
         public string EventType { get; private set; }
-        public string Payload { get; private set; } 
+        public string Payload { get; private set; }
         public DateTime OccurredOn { get; private set; }
         public DateTime? ProcessedAt { get; private set; }
         public string? Error { get; private set; }
+        public int RetryCount { get; private set; }
 
         internal OutboxMessage(string eventType, string payload, DateTime occurredOn)
         {
@@ -26,6 +28,9 @@ namespace Domain.Entities
         public void MarkAsFailed(string errorMessage)
         {
             Error = errorMessage;
+            RetryCount++;
         }
+
+        public bool CanRetry(int maxRetries) => RetryCount < maxRetries;
     }
 }

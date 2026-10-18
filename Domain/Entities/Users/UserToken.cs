@@ -18,5 +18,13 @@ namespace Domain.Entities.Users
         public string IpAddress { get; private set; } = ipAddress;
         public bool IsRevoked { get; private set; } = false;
         public DateTime ExpiresAt { get; private set; } = expiresAt;
+
+        public void Revoke()
+        {
+            IsRevoked = true;
+        }
+
+        public bool IsExpired() => ExpiresAt <= DateTime.UtcNow;
+        public bool IsValid() => !IsRevoked && !IsExpired();
     }
 }

@@ -1,8 +1,8 @@
-﻿using Domain.Abstractions.Auditable;
+﻿using Domain.Abstractions.Events;
 
 namespace Domain.Abstractions.Entities
 {
-    public interface IAggregate : IAuditable, ISoftDeletable
+    public interface IAggregate
     {
         IReadOnlyList<IDomainEvent> DomainEvents { get; }
         void AddDomainEvent(IDomainEvent domainEvent);

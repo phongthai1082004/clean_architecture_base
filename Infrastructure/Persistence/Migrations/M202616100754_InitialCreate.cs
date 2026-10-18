@@ -14,9 +14,18 @@ namespace Infrastructure.Persistence.Migrations
                 .WithColumn("PasswordHash").AsString(255).Nullable()
                 .WithColumn("PhoneNumber").AsString(50).Nullable()
                 .WithColumn("AvatarUrl").AsString(500).NotNullable().WithDefaultValue("")
-                .WithColumn("Status").AsInt32().NotNullable().WithDefaultValue(0)
-                .WithColumn("CreatedAt").AsDateTimeOffset().NotNullable().WithDefault(SystemMethods.CurrentUTCDateTime)
-                .WithColumn("UpdatedAt").AsDateTimeOffset().Nullable();
+                .WithColumn("Status").AsInt32().NotNullable().WithDefaultValue(0);
+
+            Create.Table("user_tokens")
+                .WithColumn("Id").AsInt32().PrimaryKey().Identity()
+                .WithColumn("UserId").AsGuid().NotNullable()
+                    .ForeignKey("fk_user_tokens_users_user_id", "users", "Id")
+                .WithColumn("TokenValue").AsCustom("TEXT").NotNullable()
+                .WithColumn("Type").AsInt32().NotNullable()
+                .WithColumn("DeviceInfo").AsString(500).NotNullable()
+                .WithColumn("IpAddress").AsString(100).NotNullable()
+                .WithColumn("IsRevoked").AsBoolean().NotNullable().WithDefaultValue(false)
+                .WithColumn("ExpiresAt").AsDateTimeOffset().NotNullable();
 
             Create.Table("external_tokens")
                 .WithColumn("Id").AsInt32().PrimaryKey().Identity()
@@ -66,7 +75,8 @@ namespace Infrastructure.Persistence.Migrations
                 .WithColumn("Payload").AsCustom("TEXT").NotNullable()
                 .WithColumn("OccurredOn").AsDateTimeOffset().NotNullable()
                 .WithColumn("ProcessedAt").AsDateTimeOffset().Nullable()
-                .WithColumn("Error").AsCustom("TEXT").Nullable();
+                .WithColumn("Error").AsCustom("TEXT").Nullable()
+                .WithColumn("RetryCount").AsInt32().NotNullable().WithDefaultValue(0);
         }
 
         public override void Down()
@@ -77,6 +87,7 @@ namespace Infrastructure.Persistence.Migrations
             Delete.Table("notifications");
             Delete.Table("audit_logs");
             Delete.Table("external_tokens");
+            Delete.Table("user_tokens");
             Delete.Table("users");
         }
     }

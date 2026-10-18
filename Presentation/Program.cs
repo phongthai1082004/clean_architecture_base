@@ -1,11 +1,17 @@
 using Application.Interfaces;
+using Infrastructure;
+using Presentation.Middlewares;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Host.UseSerilog((context, config) =>
+    config.ReadFrom.Configuration(context.Configuration));
 
+builder.Services.AddDependencyInjection(builder.Configuration);
 builder.Services.AddControllers();
-
-builder.Services.AddOpenApi();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
@@ -15,11 +21,12 @@ using (var scope = app.Services.CreateScope())
     await initializer.MigrateAsync();
 }
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
+app.UseMiddleware<GlobalExceptionMiddleware>();
+
+app.UseSwagger();
+app.UseSwaggerUI();
+
+app.UseMiddleware<ResponseWrapperMiddleware>();
 
 app.UseHttpsRedirection();
 
