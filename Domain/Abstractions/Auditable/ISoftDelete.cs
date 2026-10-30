@@ -1,7 +1,7 @@
 ﻿
 namespace Domain.Abstractions.Auditable
 {
-    public interface ISoftDeletable
+    public interface ISoftDelete
     {
         bool IsDeleted { get; set; }
         DateTimeOffset? DeleteOnUtc { get; set; }

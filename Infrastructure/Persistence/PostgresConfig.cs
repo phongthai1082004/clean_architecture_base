@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Configuration;
 
-namespace Infrastructure.Persistence.Configurations
+namespace Infrastructure.Persistence
 {
     public static class PostgresConfig
     {

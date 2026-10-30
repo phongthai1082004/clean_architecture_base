@@ -2,7 +2,7 @@
 
 namespace Domain.Abstractions.Entities
 {
-    public class AggregateRoot : GuidEntity, IAggregate
+    public class AggregateRoot : GuidEntitySoftDelete, IAggregate
     {
         private readonly List<IDomainEvent> _domainEvents = [];
         public IReadOnlyList<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
@@ -14,7 +14,7 @@ namespace Domain.Abstractions.Entities
 
         public IDomainEvent[] ClearDomainEvents()
         {
-            IDomainEvent[] dequeuedEvents = _domainEvents.ToArray();
+            IDomainEvent[] dequeuedEvents = [.. _domainEvents];
             _domainEvents.Clear();
             return dequeuedEvents;
         }

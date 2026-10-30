@@ -3,19 +3,12 @@
     public class ApiResponse<T>
     {
         public bool Succeeded { get; init; }
-
         public int StatusCode { get; init; }
-
         public string? Message { get; init; }
-
         public T? Data { get; init; }
-
         public IReadOnlyList<string>? Errors { get; init; }
-
         public DateTime Timestamp { get; init; } = DateTime.UtcNow;
-
         protected ApiResponse() { }
-
         public static ApiResponse<T> Success(T data, string? message = null, int statusCode = 200)
         {
             return new ApiResponse<T>
@@ -72,7 +65,6 @@
                 Message = message ?? "Success."
             };
         }
-
         public static new ApiResponse Failure(string errorMessage, int statusCode = 400)
         {
             return new ApiResponse
@@ -83,7 +75,6 @@
                 Errors = [errorMessage]
             };
         }
-
         public static new ApiResponse Failure(IEnumerable<string> errors, string message = "Invalid request.", int statusCode = 400)
         {
             return new ApiResponse

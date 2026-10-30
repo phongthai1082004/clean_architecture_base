@@ -1,6 +1,6 @@
 ﻿using System.Data;
 using System.Data.Common;
-using Infrastructure.Abstractions;
+using Domain.Abstractions.Repository;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 

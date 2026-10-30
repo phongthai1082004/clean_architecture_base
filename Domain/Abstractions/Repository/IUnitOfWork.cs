@@ -1,7 +1,7 @@
 ﻿using System.Data;
 using System.Data.Common;
 
-namespace Infrastructure.Abstractions
+namespace Domain.Abstractions.Repository
 {
     public interface IUnitOfWork : IAsyncDisposable
     {
