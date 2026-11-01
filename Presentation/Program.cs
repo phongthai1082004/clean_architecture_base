@@ -26,8 +26,6 @@ app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseSwagger();
 app.UseSwaggerUI();
 
-app.UseMiddleware<ResponseWrapperMiddleware>();
-
 app.UseHttpsRedirection();
 
 app.UseAuthorization();

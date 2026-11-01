@@ -1,5 +1,7 @@
-﻿using System.Text.Json;
-using Application.Shared;
+﻿using Infrastructure.Logging;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Logging;
 
 namespace Presentation.Middlewares
 {
@@ -7,11 +9,6 @@ namespace Presentation.Middlewares
         RequestDelegate next,
         ILogger<GlobalExceptionMiddleware> logger)
     {
-        private static readonly JsonSerializerOptions JsonOptions = new()
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        };
-
         public async Task InvokeAsync(HttpContext context)
         {
             try
@@ -20,28 +17,69 @@ namespace Presentation.Middlewares
             }
             catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
             {
-                logger.LogInformation("Request aborted by client: {Path}", context.Request.Path);
-                throw;
+                logger.LogWithLocation(
+                    LogLevel.Information,
+                    $"Request aborted by client: {context.Request.Path}");
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Unhandled exception on {Method} {Path}", context.Request.Method, context.Request.Path);
-
                 if (context.Response.HasStarted)
                 {
-                    logger.LogWarning("Response already started, cannot write error body.");
+                    logger.LogWithLocation(
+                        LogLevel.Warning,
+                        "Response already started, cannot write custom error body.",
+                        ex);
                     throw;
                 }
 
+                var (statusCode, message) = ex switch
+                {
+                    KeyNotFoundException notFound => (
+                        StatusCodes.Status404NotFound,
+                        notFound.Message),
+
+                    ArgumentException or InvalidOperationException => (
+                        StatusCodes.Status400BadRequest,
+                        ex.Message),
+
+                    UnauthorizedAccessException unauthorized => (
+                        StatusCodes.Status403Forbidden,
+                        unauthorized.Message),
+
+                    _ => (
+                        StatusCodes.Status500InternalServerError,
+                        "An unexpected error occurred. Please try again later.")
+                };
+
+                if (statusCode >= StatusCodes.Status500InternalServerError)
+                {
+                    logger.LogWithLocation(
+                        LogLevel.Error,
+                        $"Unhandled server error on {context.Request.Method} {context.Request.Path}: {ex.Message}",
+                        ex);
+                }
+                else
+                {
+                    logger.LogWithLocation(
+                        LogLevel.Information,
+                        $"Client request error ({statusCode}) on {context.Request.Method} {context.Request.Path}: {message}");
+                }
+
+                var problem = new ProblemDetails
+                {
+                    Type = $"https://httpstatuses.io/{statusCode}",
+                    Title = ReasonPhrases.GetReasonPhrase(statusCode),
+                    Status = statusCode,
+                    Detail = message,
+                    Instance = context.Request.Path
+                };
+                problem.Extensions["traceId"] = context.TraceIdentifier;
+
                 context.Response.Clear();
-                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-                context.Response.ContentType = "application/json";
+                context.Response.StatusCode = statusCode;
+                context.Response.ContentType = "application/problem+json";
 
-                var response = ApiResponse<object>.Failure(
-                    "An unexpected error occurred.",
-                    StatusCodes.Status500InternalServerError);
-
-                await context.Response.WriteAsync(JsonSerializer.Serialize(response, JsonOptions));
+                await context.Response.WriteAsJsonAsync(problem);
             }
         }
     }

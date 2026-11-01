@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Logging
 {
-    public static class LoggerExtensions
+    public static partial class LoggingExtensions
     {
         public static void LogWithLocation(
             this ILogger logger,
@@ -14,14 +14,19 @@ namespace Infrastructure.Logging
             [CallerFilePath] string sourceFilePath = "",
             [CallerLineNumber] int sourceLineNumber = 0)
         {
+            if (!logger.IsEnabled(logLevel))
+            {
+                return;
+            }
+
             logger.Log(
                 logLevel,
                 exception,
                 "[{FileName}:{LineNumber} -> {Method}] {Message}",
-                message,
-                Path.GetFileName(sourceFilePath),
+                System.IO.Path.GetFileName(sourceFilePath),
                 sourceLineNumber,
-                memberName);
+                memberName,
+                message);
         }
     }
 }
