@@ -11,7 +11,7 @@ namespace Infrastructure.Persistence.Configurations.Base
         {
             builder.Property(e => e.CreatedOnUtc).IsRequired();
             builder.Property(e => e.CreatedBy);
-            builder.Property(e => e.LastModifiedUtc);
+            builder.Property(e => e.LastModifiedOnUtc);
             builder.Property(e => e.LastModifiedBy);
         }
     }

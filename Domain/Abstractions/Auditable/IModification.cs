@@ -2,7 +2,7 @@
 {
     public interface IModificationAuditable
     {
-        DateTimeOffset? LastModifiedUtc { get; set; }
+        DateTimeOffset? LastModifiedOnUtc { get; set; }
         Guid? LastModifiedBy { get; set; }
     }
 }

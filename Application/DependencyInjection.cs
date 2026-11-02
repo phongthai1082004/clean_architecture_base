@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Application.Interfaces;
+using Application.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Application
 {
@@ -10,6 +12,8 @@ namespace Application
                 cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly);
             });
 
+            // Register Service
+            services.AddScoped<ICurrentUserService, CurrentUserService>();
             return services;
         }
     }

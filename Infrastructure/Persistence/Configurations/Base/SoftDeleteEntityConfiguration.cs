@@ -12,7 +12,7 @@ namespace Infrastructure.Persistence.Configurations.Base
             base.Configure(builder);
 
             builder.Property(e => e.IsDeleted).HasDefaultValue(false);
-            builder.Property(e => e.DeleteOnUtc);
+            builder.Property(e => e.DeletedOnUtc);
             builder.Property(e => e.DeletedBy);
             builder.HasQueryFilter(e => !e.IsDeleted);
         }

@@ -8,9 +8,16 @@ namespace Domain.Abstractions.Repository
         Task<T?> GetByIdAsync(object[] keyValues, CancellationToken ct = default);
         Task<bool> CheckExist(ISpecification<T> spec, CancellationToken ct = default);
         Task<int> CountAsync(ISpecification<T>? spec = null, CancellationToken ct = default);
-        Task<PagedResult<T>> GetListAsync(
-            PagedRequest pagedRequest,
-            ISpecification<T>? spec = null,
+        Task<PagedResultBase<T>> GetListAsync(
+            PageRequest request,
+            ISpecification<T>? specification = null,
+            Func<T, (DateTimeOffset? CursorTime, string? CursorId)>? cursorSelector = null,
+            CancellationToken ct = default);
+
+        Task<PagedResultBase<TResult>> GetListAsync<TResult>(
+            PageRequest request,
+            ISpecification<T, TResult> specification,
+            Func<TResult, (DateTimeOffset? CursorTime, string? CursorId)>? cursorSelector = null,
             CancellationToken ct = default);
 
         // Single Commands

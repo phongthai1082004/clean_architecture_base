@@ -1,7 +1,6 @@
 ﻿using Infrastructure.Logging;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.Extensions.Logging;
 
 namespace Presentation.Middlewares
 {

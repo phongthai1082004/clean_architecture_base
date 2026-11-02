@@ -2,6 +2,7 @@
 using Domain.Abstractions.Repository;
 using Domain.Abstractions.Shared;
 using Infrastructure.Persistence.Contexts;
+using Infrastructure.Utils;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.Repositories.Common
@@ -28,14 +29,6 @@ namespace Infrastructure.Persistence.Repositories.Common
             return entity;
         }
 
-        public async Task<PagedResult<T>> GetListAsync(
-            PagedRequest pagedRequest,
-            ISpecification<T>? spec = null,
-            CancellationToken ct = default)
-        {
-            throw new NotImplementedException();
-        }
-
         public async Task<bool> CheckExist(ISpecification<T> spec, CancellationToken ct = default)
         {
             if (spec.Criteria == null) throw new ArgumentException("Missing Criteria!");
@@ -50,6 +43,19 @@ namespace Infrastructure.Persistence.Repositories.Common
             }
 
             return await dbSet.CountAsync(spec.Criteria, ct);
+        }
+
+        public async Task<PagedResultBase<T>> GetListAsync(PageRequest request, ISpecification<T>? specification = null, Func<T, (DateTimeOffset? CursorTime, string? CursorId)>? cursorSelector = null, CancellationToken ct = default)
+        {
+            var query = dbSet.AsQueryable();
+
+            query = SpecificationEvaluator.GetQuery<T>(query, specification);
+
+        }
+
+        public Task<PagedResultBase<TResult>> GetListAsync<TResult>(PageRequest request, ISpecification<T, TResult> specification, Func<TResult, (DateTimeOffset? CursorTime, string? CursorId)>? cursorSelector = null, CancellationToken ct = default)
+        {
+            throw new NotImplementedException();
         }
 
         // Commands

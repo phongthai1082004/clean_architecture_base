@@ -1,18 +1,11 @@
 ﻿namespace Domain.Abstractions.Shared
 {
-    public class PagedResult
+    public class CursorResult<T> : PagedResultBase<T>
     {
-        public int PageSize { get; set; }
         public bool HasNextPage { get; set; }
         public DateTimeOffset? LastCursorTime { get; set; }
         public string? LastCursorId { get; set; }
-    }
-
-    public class PagedResult<T> : PagedResult
-    {
-        public IReadOnlyList<T> Items { get; set; } = [];
-
-        public PagedResult(
+        public CursorResult(
             IReadOnlyList<T> items,
             int pageSize,
             bool hasNextPage,

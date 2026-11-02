@@ -23,7 +23,7 @@ namespace Infrastructure.Logging
                 logLevel,
                 exception,
                 "[{FileName}:{LineNumber} -> {Method}] {Message}",
-                System.IO.Path.GetFileName(sourceFilePath),
+                Path.GetFileName(sourceFilePath),
                 sourceLineNumber,
                 memberName,
                 message);
