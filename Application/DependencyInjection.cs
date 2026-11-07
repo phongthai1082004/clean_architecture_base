@@ -1,18 +1,28 @@
-﻿using Application.Interfaces;
+﻿using Application.Behaviors;
+using Application.Interfaces;
 using Application.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Application
 {
-    internal class DependencyInjection
+    public static class ApplicationDependencyInjection
     {
-        public static IServiceCollection AddDependencyInjection(IServiceCollection services)
+        public static IServiceCollection AddApplication(this IServiceCollection services)
         {
-            services.AddMediatR(cfg => {
-                cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly);
+            services.AddMediatR(cfg =>
+            {
+                cfg.RegisterServicesFromAssembly(typeof(ApplicationDependencyInjection).Assembly);
+
+                cfg.AddOpenBehavior(typeof(ExceptionHandlingBehavior<,>));
+                cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
+                cfg.AddOpenBehavior(typeof(PerformanceBehavior<,>));
+                cfg.AddOpenBehavior(typeof(AuthenticationBehavior<,>));
+                cfg.AddOpenBehavior(typeof(ValidatorBehavior<,>));
+                cfg.AddOpenBehavior(typeof(IdempotencyBehavior<,>));
+                cfg.AddOpenBehavior(typeof(TransactionBehavior<,>));
+                cfg.AddOpenBehavior(typeof(CachingBehavior<,>));
             });
 
-            // Register Service
             services.AddScoped<ICurrentUserService, CurrentUserService>();
             return services;
         }

@@ -8,6 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog((context, config) =>
     config.ReadFrom.Configuration(context.Configuration));
 
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddDependencyInjection(builder.Configuration);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -20,6 +21,12 @@ using (var scope = app.Services.CreateScope())
     var initializer = scope.ServiceProvider.GetRequiredService<IDatabaseInitializer>();
     await initializer.MigrateAsync();
 }
+
+app.Use((context, next) =>
+{
+    context.Request.EnableBuffering();
+    return next(context);
+});
 
 app.UseMiddleware<GlobalExceptionMiddleware>();
 

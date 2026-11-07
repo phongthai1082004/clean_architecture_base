@@ -5,16 +5,19 @@ namespace Infrastructure.Persistence
     public static class PostgresConfig
     {
         public static string GetDatabaseName(IConfiguration configuration) =>
-            configuration.GetSection("PostgresConfig")["Database"] ?? "your_db_name";
+            Value(configuration.GetSection("PostgresConfig"), "Database", "your_db_name");
 
         public static string BuildConnectionString(IConfiguration configuration, string? database = null)
         {
             var section = configuration.GetSection("PostgresConfig");
-            return $"Host={section["Host"] ?? "localhost"};" +
-                   $"Port={section["Port"] ?? "5432"};" +
-                   $"Database={database ?? GetDatabaseName(configuration)};" +
-                   $"Username={section["Username"] ?? "your_db_user"};" +
-                   $"Password={section["Password"] ?? "your_db_password"}";
+            return $"Host={Value(section, "Host", "localhost")};" +
+                   $"Port={Value(section, "Port", "5432")};" +
+                   $"Database={(string.IsNullOrWhiteSpace(database) ? GetDatabaseName(configuration) : database)};" +
+                   $"Username={Value(section, "Username", "your_db_user")};" +
+                   $"Password={Value(section, "Password", "your_db_password")}";
         }
+
+        private static string Value(IConfigurationSection section, string key, string fallback) =>
+            string.IsNullOrWhiteSpace(section[key]) ? fallback : section[key]!;
     }
 }

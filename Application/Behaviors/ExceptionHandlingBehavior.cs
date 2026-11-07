@@ -15,19 +15,9 @@ namespace Application.Behaviors
             {
                 return await next();
             }
-            catch(OperationCanceledException) when (cancellationToken.IsCancellationRequested) 
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
                 logger.LogWarning("Request {RequestName} was cancelled by client.", typeof(TRequest).Name);
-                throw;
-            }
-            catch(Exception ex)
-            {
-                var requestName = typeof(TRequest).Name;
-
-                logger.LogError(
-                    ex,
-                    "Unhandled exception occurred while processing request {RequestName}",
-                    requestName);
                 throw;
             }
         }

@@ -2,10 +2,9 @@
 
 namespace Domain.Abstractions.Repository
 {
-    public interface IIdempotentRepository<IdempotencyRecord, Guid>
-       : IBaseRepository<IdempotencyRecord, Guid>
+    public interface IIdempotentRepository<TEntity, TKey>
+       : IBaseRepository<TEntity, TKey>
     {
-        Task<bool> CheckExistByRequestHash(string requestHash, CancellationToken cancellation);
-        Task<IdempotencyRecord?> GetByIdempotencyKey(string idempotencyKey, CancellationToken cancellationToken);
+        Task<TEntity?> GetByIdempotencyKey(string idempotencyKey, Guid? userId, string endpoint, CancellationToken cancellationToken);
     }
 }

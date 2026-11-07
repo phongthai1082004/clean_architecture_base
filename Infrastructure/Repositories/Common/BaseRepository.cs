@@ -71,35 +71,37 @@ namespace Infrastructure.Repositories.Common
             Func<TItem, (DateTimeOffset? CursorTime, string? CursorId)>? cursorSelector,
             CancellationToken ct = default) where TItem : class, ICursorItem<TKey>
         {
-            var pageSize = request.PageSize <= 0 ? 10 : request.PageSize;
+            const int maxPageSize = 100;
+            var pageSize = request.PageSize <= 0 ? 10 : Math.Min(request.PageSize, maxPageSize);
 
             if (request.IsCursor)
             {
                 if (!string.IsNullOrWhiteSpace(request.CursorId))
                 {
-                    if (Guid.TryParse(request.CursorId, out var guidCursorId) && request.CursorTime.HasValue)
+                    if (typeof(TKey) == typeof(Guid) && Guid.TryParse(request.CursorId, out var guidCursorId))
                     {
-                        var cursorTime = request.CursorTime.Value;
-                        query = query.Where(item => item.CreatedOnUtc < cursorTime
-                            || (item.CreatedOnUtc == cursorTime && (Guid)(object)item.Id! < guidCursorId));
+                        query = request.CursorTime is { } cursorTime
+                            ? query.Where(item => item.CreatedOnUtc < cursorTime
+                                || (item.CreatedOnUtc == cursorTime && (Guid)(object)item.Id! < guidCursorId))
+                            : query.Where(item => (Guid)(object)item.Id! < guidCursorId);
                     }
-                    else if (long.TryParse(request.CursorId, out var longCursorId))
+                    else if (typeof(TKey) == typeof(int) && int.TryParse(request.CursorId, out var intCursorId))
                     {
-                        if (typeof(TKey) == typeof(int))
-                        {
-                            var intCursorId = (int)longCursorId;
-                            query = query.Where(item => (int)(object)item.Id! < intCursorId);
-                        }
-                        else
-                        {
-                            query = query.Where(item => (long)(object)item.Id! < longCursorId);
-                        }
+                        query = request.CursorTime is { } cursorTime
+                            ? query.Where(item => item.CreatedOnUtc < cursorTime
+                                || (item.CreatedOnUtc == cursorTime && (int)(object)item.Id! < intCursorId))
+                            : query.Where(item => (int)(object)item.Id! < intCursorId);
+                    }
+                    else if (typeof(TKey) == typeof(long) && long.TryParse(request.CursorId, out var longCursorId))
+                    {
+                        query = request.CursorTime is { } cursorTime
+                            ? query.Where(item => item.CreatedOnUtc < cursorTime
+                                || (item.CreatedOnUtc == cursorTime && (long)(object)item.Id! < longCursorId))
+                            : query.Where(item => (long)(object)item.Id! < longCursorId);
                     }
                 }
 
-                query = typeof(TKey) == typeof(Guid)
-                    ? query.OrderByDescending(item => item.CreatedOnUtc).ThenByDescending(item => item.Id)
-                    : query.OrderByDescending(item => item.Id);
+                query = query.OrderByDescending(item => item.CreatedOnUtc).ThenByDescending(item => item.Id);
 
                 var result = await query.Take(pageSize + 1).ToListAsync(ct);
 
@@ -136,7 +138,7 @@ namespace Infrastructure.Repositories.Common
 
             var count = await query.CountAsync(ct);
             var pageCount = (int)Math.Ceiling(count / (double)pageSize);
-            var currentPage = request.CurrentPage ?? 1;
+            var currentPage = Math.Max(request.CurrentPage ?? 1, 1);
 
             var pagedList = await query
                 .Skip((currentPage - 1) * pageSize)
@@ -188,30 +190,9 @@ namespace Infrastructure.Repositories.Common
             dbSet.RemoveRange(entities);
         }
 
-        // Bulk Streaming
-        public async Task<int> BulkInsertStreamingAsync(IAsyncEnumerable<T> dataStream, int batchSize = 1000, CancellationToken ct = default)
-        {
-            throw new NotImplementedException();
-        }
-        
-        public Task<int> BulkUpdateStreamingAsync(IAsyncEnumerable<T> entities, int batchSize = 1000, CancellationToken ct = default)
-        {
-            throw new NotImplementedException();
-        }
-        
-        public Task<int> DeleteByIdsStreamingAsync(IAsyncEnumerable<TKey> ids, int batchSize = 1000, CancellationToken ct = default)
-        {
-            throw new NotImplementedException();
-        }
         public async Task SaveChangesAsync(CancellationToken cancellationToken)
         {
             await context.SaveChangesAsync(cancellationToken);
-        }
-        private async Task ProcessBatchAsync(List<T> batch, CancellationToken ct)
-        {
-            context.Set<T>().AddRange(batch);
-            await context.SaveChangesAsync(ct);
-            context.ChangeTracker.Clear();
         }
     }
 }

@@ -1,14 +1,17 @@
-﻿using Application.Cache.Common;
+﻿using Application;
+using Application.Cache.Common;
 using Application.Interfaces;
+using Domain.Abstractions.Repository;
+using Domain.Entities.Idempotency;
 using Infrastructure.Cache;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.Contexts;
+using Infrastructure.Persistence.Interceptors;
+using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Npgsql;
 using StackExchange.Redis;
-using System.Data.Common;
 
 namespace Infrastructure
 {
@@ -16,11 +19,16 @@ namespace Infrastructure
     {
         public static IServiceCollection AddDependencyInjection(this IServiceCollection services, IConfiguration configuration)
         {
+            services.AddApplication();
+
             var connectionString = PostgresConfig.BuildConnectionString(configuration) ?? throw new MissingFieldException("Please config the damn postgres connection string!");
-            services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString));
-            services.AddScoped<DbConnection>(_ => new NpgsqlConnection(connectionString));
+            services.AddScoped<AuditInterceptor>();
+            services.AddDbContext<ApplicationDbContext>((sp, options) =>
+                options.UseNpgsql(connectionString)
+                    .AddInterceptors(sp.GetRequiredService<AuditInterceptor>()));
             services.AddScoped<IDatabaseInitializer, DatabaseInitializer>();
             services.AddScoped<ICacheService, CacheService>();
+            services.AddScoped<IIdempotentRepository<IdempotencyRecord, int>, IdempotentRepository>();
 
             // Cache
             var redisConnectionString = configuration["Redis:ConnectionString"]

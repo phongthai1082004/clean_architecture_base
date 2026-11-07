@@ -7,7 +7,6 @@ namespace Application.Behaviors
     public class PerformanceBehavior<TRequest, TResponse>(ILogger<PerformanceBehavior<TRequest, TResponse>> logger)
         : IPipelineBehavior<TRequest, TResponse> where TRequest : notnull
     {
-        private readonly Stopwatch _timer = new();
         public async Task<TResponse> Handle(
             TRequest request, 
             RequestHandlerDelegate<TResponse> next, 

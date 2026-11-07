@@ -28,17 +28,17 @@ namespace Domain.Entities.Idempotency
             ResponseStatusCode = statusCode;
             ResponseBody = body;
             ResponseContentType = contentType;
+            ExpiresAt = DateTime.UtcNow.AddDays(1);
         }
 
         public bool IsExpired() => ExpiresAt <= DateTime.UtcNow;
         public void MarkFailed() => Status = IdempotencyStatus.Failed;
         /// <summary>
-        /// Computes a SHA-256 hash using the provided key, endpoint, userId, and request payload.
+        /// Computes a SHA-256 hash using the provided endpoint, userId, and request payload.
         /// </summary>
-        public static string ComputeRequestHash(string key, string endpoint, Guid? userId, string? requestBody)
+        public static string ComputeRequestHash(string endpoint, Guid? userId, string? requestBody)
         {
             string rawPayload = string.Join("|",
-                key,
                 endpoint,
                 userId?.ToString() ?? string.Empty,
                 requestBody ?? string.Empty

@@ -15,74 +15,74 @@ namespace Application.Behaviors
     public class IdempotencyBehavior<TRequest, TResponse>(
         ICacheService cache,
         ICurrentUserService currentUser,
-        IIdempotentRepository<IdempotencyRecord, Guid> idempotentRepository)
+        IIdempotentRepository<IdempotencyRecord, int> idempotentRepository)
         : IPipelineBehavior<TRequest, TResponse> where TRequest : IIdempotentCommand<TResponse>
     {
+        private static readonly TimeSpan PendingTtl = TimeSpan.FromMinutes(2);
+        private static readonly TimeSpan CompletedTtl = TimeSpan.FromDays(1);
+
         public async Task<TResponse> Handle(
             TRequest request,
             RequestHandlerDelegate<TResponse> next,
             CancellationToken cancellationToken)
         {
-            var idempotencyKeyRaw = currentUser.Idempotency ?? throw new MissingIdempotencyKeyException();
+            var idempotencyKey = currentUser.Idempotency ?? throw new MissingIdempotencyKeyException();
             var requestHash = IdempotencyRecord.ComputeRequestHash(
-                idempotencyKeyRaw,
                 currentUser.Endpoint,
                 currentUser.UserId,
                 currentUser.Payload);
 
-            var shortDataKey = CacheKeys.IdempotencyShortData<TRequest>(idempotencyKeyRaw);
-            var lockKey = CacheKeys.IdempotencyLockData<string>(idempotencyKeyRaw);
+            var dataKey = CacheKeys.IdempotencyShortData<TRequest>(idempotencyKey, currentUser.UserId, currentUser.Endpoint);
+            var lockKey = CacheKeys.IdempotencyLockData<TRequest>(idempotencyKey, currentUser.UserId, currentUser.Endpoint);
 
-            var cacheExistingIdempotency = await cache.GetAsync<IdempotencyRecord>(shortDataKey);
-            if (cacheExistingIdempotency != null)
+            var cached = await cache.GetAsync<IdempotencyCacheEntry>(dataKey);
+            if (cached is not null)
             {
-                if (!string.Equals(cacheExistingIdempotency.RequestHash, requestHash, StringComparison.Ordinal))
+                if (!string.Equals(cached.RequestHash, requestHash, StringComparison.Ordinal))
                 {
                     throw new UnprocessableEntityException("There's something horrible happen to your payload. Please try again!");
                 }
 
-                if (cacheExistingIdempotency.Status == IdempotencyStatus.Completed)
+                if (cached.Status == IdempotencyStatus.Completed)
                 {
-                    return DeserializeResponse(cacheExistingIdempotency.ResponseBody);
+                    return DeserializeResponse(cached.ResponseBody);
                 }
 
                 throw new ConflictException("A request with the same idempotency key is currently being processed.");
             }
 
-            var existingIdempotency = await idempotentRepository.GetByIdempotencyKey(idempotencyKeyRaw, cancellationToken);
-            if (existingIdempotency != null)
+            var existing = await idempotentRepository.GetByIdempotencyKey(
+                idempotencyKey,
+                currentUser.UserId,
+                currentUser.Endpoint,
+                cancellationToken);
+            if (existing is not null)
             {
-                if (!string.Equals(existingIdempotency.RequestHash, requestHash, StringComparison.Ordinal))
+                if (!string.Equals(existing.RequestHash, requestHash, StringComparison.Ordinal))
                 {
                     throw new UnprocessableEntityException("There's something horrible happen to your payload. Please try again!");
                 }
 
-                if (existingIdempotency.Status == IdempotencyStatus.Pending)
+                if (existing.Status == IdempotencyStatus.Completed)
                 {
-                    if (existingIdempotency.IsExpired())
-                    {
-                        existingIdempotency.MarkFailed();
-                        idempotentRepository.Update(existingIdempotency);
-                        await idempotentRepository.SaveChangesAsync(cancellationToken);
-                        throw new TimeoutException("The operation takes too long to process and it's failed!");
-                    }
+                    await cache.SetAsync(dataKey, ToEntry(existing), CompletedTtl);
+                    return DeserializeResponse(existing.ResponseBody);
+                }
 
+                if (existing.Status == IdempotencyStatus.Failed || existing.IsExpired())
+                {
+                    idempotentRepository.Delete(existing);
+                    await idempotentRepository.SaveChangesAsync(cancellationToken);
+                }
+                else
+                {
                     throw new ConflictException("A request with the same idempotency key is currently being processed.");
-                }
-                else if (existingIdempotency.Status == IdempotencyStatus.Failed)
-                {
-                    throw new InvalidOperationException("The previous operation with this idempotency key failed and cannot be retried.");
-                }
-                else if (existingIdempotency.Status == IdempotencyStatus.Completed)
-                {
-                    await cache.SetAsync(shortDataKey, existingIdempotency, TimeSpan.FromDays(1));
-                    return DeserializeResponse(existingIdempotency.ResponseBody);
                 }
             }
 
             bool isLocked = await cache.SetAsync(
                 lockKey,
-                idempotencyKeyRaw,
+                idempotencyKey,
                 TimeSpan.FromSeconds(30),
                 CacheCondition.NotExists);
 
@@ -92,11 +92,11 @@ namespace Application.Behaviors
             }
 
             var record = new IdempotencyRecord(
-                idempotencyKeyRaw,
+                idempotencyKey,
                 currentUser.UserId,
                 currentUser.Endpoint,
                 requestHash,
-                DateTime.UtcNow.AddDays(1)
+                DateTime.UtcNow.Add(PendingTtl)
             );
 
             idempotentRepository.Insert(record);
@@ -112,11 +112,12 @@ namespace Application.Behaviors
                     responseBody = JsonSerializer.Serialize(response);
                 }
 
-                record.Complete(200, responseBody, "application/json");
+                var statusCode = typeof(TResponse) == typeof(Unit) ? 204 : 200;
+                record.Complete(statusCode, responseBody, "application/json");
                 idempotentRepository.Update(record);
                 await idempotentRepository.SaveChangesAsync(cancellationToken);
 
-                await cache.SetAsync(shortDataKey, record, TimeSpan.FromDays(1));
+                await cache.SetAsync(dataKey, ToEntry(record), CompletedTtl);
 
                 return response;
             }
@@ -139,10 +140,13 @@ namespace Application.Behaviors
                 await cache.ExecuteScriptAsync(
                     releaseLockScript,
                     keys: [lockKey],
-                    args: [idempotencyKeyRaw]
+                    args: [idempotencyKey]
                 );
             }
         }
+
+        private static IdempotencyCacheEntry ToEntry(IdempotencyRecord record) =>
+            new(record.RequestHash ?? string.Empty, record.Status, record.ResponseBody);
 
         private static TResponse DeserializeResponse(string? responseBody)
         {

@@ -31,19 +31,6 @@ namespace Domain.Abstractions.Repository.Common
         void BulkUpdate(IEnumerable<T> entities);
         void BulkDelete(IEnumerable<T> entities);
 
-        // Streaming Commands
-        Task<int> BulkInsertStreamingAsync(
-            IAsyncEnumerable<T> entities,
-            int batchSize = 1000,
-            CancellationToken ct = default);
-        Task<int> BulkUpdateStreamingAsync(
-            IAsyncEnumerable<T> entities, 
-            int batchSize = 1000,
-            CancellationToken ct = default);
-        Task<int> DeleteByIdsStreamingAsync(
-            IAsyncEnumerable<TKey> ids, 
-            int batchSize = 1000,
-            CancellationToken ct = default);
         Task SaveChangesAsync(CancellationToken cancellationToken);
     }
 }
