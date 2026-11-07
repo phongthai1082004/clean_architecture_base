@@ -1,9 +1,10 @@
 ﻿
 using Domain.Abstractions.Auditable;
+using Domain.Abstractions.Shared;
 
 namespace Domain.Abstractions.Entities
 {
-    public abstract class BaseEntity<TKey> : IAuditable
+    public abstract class BaseEntity<TKey> : IAuditable, ICursorItem<TKey>
     {
         public TKey Id { get; protected set; } = default!;
         public DateTimeOffset CreatedOnUtc { get; set; }

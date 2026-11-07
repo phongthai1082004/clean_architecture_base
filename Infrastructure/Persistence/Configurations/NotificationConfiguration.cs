@@ -16,7 +16,7 @@ namespace Infrastructure.Persistence.Configurations
 
             builder.Property(n => n.Title).HasMaxLength(200).IsRequired();
             builder.Property(n => n.Message).IsRequired();
-            builder.Property(n => n.Type).HasMaxLength(50).IsRequired();
+            builder.Property(n => n.Type).IsRequired();
 
             builder.HasOne<User>().WithMany().HasForeignKey(n => n.UserId);
         }

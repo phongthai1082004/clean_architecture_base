@@ -1,6 +1,6 @@
 ﻿using Domain.Abstractions.Shared;
 
-namespace Domain.Abstractions.Repository
+namespace Domain.Abstractions.Repository.Common
 {
     public interface IBaseRepository<T, TKey>
     {
@@ -18,7 +18,7 @@ namespace Domain.Abstractions.Repository
             PageRequest request,
             ISpecification<T, TResult> specification,
             Func<TResult, (DateTimeOffset? CursorTime, string? CursorId)>? cursorSelector = null,
-            CancellationToken ct = default);
+            CancellationToken ct = default) where TResult : class, ICursorItem<TKey>;
 
         // Single Commands
         void Insert(T entity);
@@ -44,5 +44,6 @@ namespace Domain.Abstractions.Repository
             IAsyncEnumerable<TKey> ids, 
             int batchSize = 1000,
             CancellationToken ct = default);
+        Task SaveChangesAsync(CancellationToken cancellationToken);
     }
 }

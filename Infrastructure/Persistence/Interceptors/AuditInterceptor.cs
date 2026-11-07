@@ -27,9 +27,7 @@ namespace Infrastructure.Persistence.Interceptors
         {
             if (dbContext == null) return;
             var utcNow = DateTime.UtcNow;
-            Guid? currentUserId = Guid.TryParse(currnetUserService.UserId, out var parsedGuid)
-                ? parsedGuid
-                : null;
+            var currentUserId = currnetUserService.UserId;
 
             foreach (var entry in dbContext.ChangeTracker.Entries()) 
             {

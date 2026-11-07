@@ -15,6 +15,9 @@ dotnet add package BCrypt.Net-Next
 dotnet add package System.IdentityModel.Tokens.Jwt
 dotnet add package Microsoft.Extensions.Options.ConfigurationExtensions
 
+#Cache
+dotnet add package StackExchange.Redis
+
 # Fluent Validator
 dotnet add package FluentValidation
 dotnet add package FluentValidation.DependencyInjectionExtensions

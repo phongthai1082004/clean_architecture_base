@@ -1,7 +1,7 @@
-﻿using Domain.Abstractions.Repository;
+﻿using Domain.Abstractions.Repository.Common;
 using System.Linq.Expressions;
 
-namespace Infrastructure.Persistence.Repositories.Common
+namespace Application.Specifications.Common
 {
     public abstract class BaseSpecification<T> : ISpecification<T>
     {

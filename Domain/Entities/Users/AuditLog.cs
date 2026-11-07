@@ -1,10 +1,11 @@
 ﻿using Domain.Abstractions.Entities;
+using Domain.Enums.Users;
 
 namespace Domain.Entities.Users
 {
     public class AuditLog(
         Guid? userId,
-        string action,
+        AuditAction action,
         string tableName,
         string recordId,
         string message,
@@ -12,7 +13,7 @@ namespace Domain.Entities.Users
         string? newValues) : BaseEntity<int>
     {
         public Guid? UserId { get; private set; } = userId;
-        public string Action { get; private set; } = action;
+        public AuditAction Action { get; private set; } = action;
         public string TableName { get; private set; } = tableName;
         public string RecordId { get; private set; } = recordId;
         public string Message { get; private set; } = message;

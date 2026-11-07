@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Logging
 {
-    public static partial class LoggingExtensions
+    public static partial class LogExtensions
     {
         [LoggerMessage(
             Level = LogLevel.Information,

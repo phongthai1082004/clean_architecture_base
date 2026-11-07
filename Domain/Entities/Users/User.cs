@@ -76,7 +76,7 @@ namespace Domain.Entities.Users
                 token.Revoke();
         }
 
-        public void AddExternalToken(string provider, string providerUserId, string accessToken, string? refreshToken, DateTime? expiresAt)
+        public void AddExternalToken(ExternalProvider provider, string providerUserId, string accessToken, string? refreshToken, DateTime? expiresAt)
         {
             if (_externalTokens.Any(t => t.Provider == provider))
                 throw new InvalidOperationException($"External token for provider '{provider}' already exists.");
@@ -85,7 +85,7 @@ namespace Domain.Entities.Users
             _externalTokens.Add(token);
         }
 
-        public void RemoveExternalToken(string provider)
+        public void RemoveExternalToken(ExternalProvider provider)
         {
             var token = _externalTokens.FirstOrDefault(t => t.Provider == provider);
             if (token != null)

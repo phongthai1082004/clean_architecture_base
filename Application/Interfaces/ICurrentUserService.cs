@@ -2,6 +2,9 @@
 {
     public interface ICurrentUserService
     {
-        string? UserId { get; }
+        Guid? UserId { get; }
+        string? Idempotency {  get; }
+        string Endpoint { get; }
+        string? Payload { get; }
     }
 }

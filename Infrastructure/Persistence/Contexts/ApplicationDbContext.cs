@@ -1,4 +1,5 @@
 using Domain.Entities;
+using Domain.Entities.Idempotency;
 using Domain.Entities.Notifications;
 using Domain.Entities.Users;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +16,7 @@ namespace Infrastructure.Persistence.Contexts
         public DbSet<FileMetadata> FileMetadata => Set<FileMetadata>();
         public DbSet<InboxMessage> InboxMessages => Set<InboxMessage>();
         public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
+        public DbSet<IdempotencyRecord> IdempotencyRecords => Set<IdempotencyRecord>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

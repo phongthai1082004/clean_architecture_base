@@ -13,7 +13,7 @@ namespace Infrastructure.Persistence.Configurations
 
             builder.ToTable("audit_logs");
 
-            builder.Property(a => a.Action).HasMaxLength(100).IsRequired();
+            builder.Property(a => a.Action).IsRequired();
             builder.Property(a => a.TableName).HasMaxLength(100).IsRequired();
             builder.Property(a => a.RecordId).HasMaxLength(100).IsRequired();
             builder.Property(a => a.Message).IsRequired();

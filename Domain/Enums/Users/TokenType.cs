@@ -2,8 +2,8 @@
 {
     public enum TokenType
     {
-        RefreshToken,
-        PasswordReset,
-        EmailVerification,
+        RefreshToken = 0,
+        PasswordReset = 1,
+        EmailVerification = 2
     }
 }
