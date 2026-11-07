@@ -8,6 +8,7 @@ using Domain.Enums.Idempotency;
 using Domain.Exceptions;
 using Domain.Exceptions.Idempotency;
 using MediatR;
+using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
 namespace Application.Behaviors
@@ -15,7 +16,8 @@ namespace Application.Behaviors
     public class IdempotencyBehavior<TRequest, TResponse>(
         ICacheService cache,
         ICurrentUserService currentUser,
-        IIdempotentRepository<IdempotencyRecord, int> idempotentRepository)
+        IIdempotentRepository<IdempotencyRecord, int> idempotentRepository,
+        ILogger<IdempotencyBehavior<TRequest, TResponse>> logger)
         : IPipelineBehavior<TRequest, TResponse> where TRequest : IIdempotentCommand<TResponse>
     {
         private static readonly TimeSpan PendingTtl = TimeSpan.FromMinutes(2);
@@ -32,19 +34,27 @@ namespace Application.Behaviors
                 currentUser.UserId,
                 currentUser.Payload);
 
+            logger.LogDebug(
+                "Idempotency check {RequestName} key={IdempotencyKey} user={UserId} endpoint={Endpoint}",
+                typeof(TRequest).Name, idempotencyKey, currentUser.UserId, currentUser.Endpoint);
+
             var dataKey = CacheKeys.IdempotencyShortData<TRequest>(idempotencyKey, currentUser.UserId, currentUser.Endpoint);
             var lockKey = CacheKeys.IdempotencyLockData<TRequest>(idempotencyKey, currentUser.UserId, currentUser.Endpoint);
 
             var cached = await cache.GetAsync<IdempotencyCacheEntry>(dataKey);
             if (cached is not null)
             {
+                logger.LogDebug("Idempotency cache hit for {RequestName}", typeof(TRequest).Name);
+
                 if (!string.Equals(cached.RequestHash, requestHash, StringComparison.Ordinal))
                 {
+                    logger.LogWarning("Idempotency payload mismatch (cache) for {RequestName}", typeof(TRequest).Name);
                     throw new UnprocessableEntityException("There's something horrible happen to your payload. Please try again!");
                 }
 
                 if (cached.Status == IdempotencyStatus.Completed)
                 {
+                    logger.LogInformation("Replaying idempotent response for {RequestName}", typeof(TRequest).Name);
                     return DeserializeResponse(cached.ResponseBody);
                 }
 
@@ -58,19 +68,28 @@ namespace Application.Behaviors
                 cancellationToken);
             if (existing is not null)
             {
+                logger.LogDebug(
+                    "Idempotency DB hit for {RequestName} status={Status}",
+                    typeof(TRequest).Name, existing.Status);
+
                 if (!string.Equals(existing.RequestHash, requestHash, StringComparison.Ordinal))
                 {
+                    logger.LogWarning("Idempotency payload mismatch (DB) for {RequestName}", typeof(TRequest).Name);
                     throw new UnprocessableEntityException("There's something horrible happen to your payload. Please try again!");
                 }
 
                 if (existing.Status == IdempotencyStatus.Completed)
                 {
+                    logger.LogInformation("Replaying idempotent response for {RequestName}", typeof(TRequest).Name);
                     await cache.SetAsync(dataKey, ToEntry(existing), CompletedTtl);
                     return DeserializeResponse(existing.ResponseBody);
                 }
 
                 if (existing.Status == IdempotencyStatus.Failed || existing.IsExpired())
                 {
+                    logger.LogInformation(
+                        "Resetting idempotency record for retry {RequestName} (status={Status})",
+                        typeof(TRequest).Name, existing.Status);
                     idempotentRepository.Delete(existing);
                     await idempotentRepository.SaveChangesAsync(cancellationToken);
                 }
@@ -88,8 +107,11 @@ namespace Application.Behaviors
 
             if (!isLocked)
             {
+                logger.LogDebug("Idempotency lock contention for {RequestName}", typeof(TRequest).Name);
                 throw new ConflictException("A request with the same idempotency key is currently being processed.");
             }
+
+            logger.LogDebug("Idempotency lock acquired for {RequestName}", typeof(TRequest).Name);
 
             var record = new IdempotencyRecord(
                 idempotencyKey,
@@ -119,10 +141,15 @@ namespace Application.Behaviors
 
                 await cache.SetAsync(dataKey, ToEntry(record), CompletedTtl);
 
+                logger.LogInformation(
+                    "Completed idempotent request {RequestName} status={StatusCode}",
+                    typeof(TRequest).Name, statusCode);
+
                 return response;
             }
             catch (Exception)
             {
+                logger.LogWarning("Idempotent request {RequestName} failed; marking record Failed", typeof(TRequest).Name);
                 record.MarkFailed();
                 idempotentRepository.Update(record);
                 await idempotentRepository.SaveChangesAsync(cancellationToken);

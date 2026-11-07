@@ -1,11 +1,14 @@
 ﻿using Application.Interfaces;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using System.Security.Claims;
 using System.Text;
 
 namespace Application.Services
 {
-    public class CurrentUserService(IHttpContextAccessor httpContextAccessor) : ICurrentUserService
+    public class CurrentUserService(
+        IHttpContextAccessor httpContextAccessor,
+        ILogger<CurrentUserService> logger) : ICurrentUserService
     {
         private readonly HttpContext context = httpContextAccessor.HttpContext;
         private string? _cachedPayload;
@@ -25,6 +28,7 @@ namespace Application.Services
                 var request = context?.Request;
                 if (request?.Body == null)
                 {
+                    logger.LogDebug("Request payload unavailable");
                     _isPayloadRead = true;
                     return null;
                 }
@@ -48,6 +52,8 @@ namespace Application.Services
                 _cachedPayload = reader.ReadToEnd();
                 request.Body.Position = 0;
                 _isPayloadRead = true;
+
+                logger.LogDebug("Read request payload ({Length} chars)", _cachedPayload.Length);
 
                 return _cachedPayload;
             }

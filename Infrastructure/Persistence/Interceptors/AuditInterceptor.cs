@@ -2,10 +2,13 @@
 using Domain.Abstractions.Auditable;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Persistence.Interceptors
 {
-    public class AuditInterceptor(ICurrentUserService currnetUserService) : SaveChangesInterceptor
+    public class AuditInterceptor(
+        ICurrentUserService currnetUserService,
+        ILogger<AuditInterceptor> logger) : SaveChangesInterceptor
     {
         public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
         DbContextEventData eventData,
@@ -33,6 +36,7 @@ namespace Infrastructure.Persistence.Interceptors
             {
                 if (entry.State == EntityState.Deleted && entry.Entity is ISoftDelete softDeletable)
                 {
+                    logger.LogDebug("Soft-delete {Entity}", entry.Metadata.ClrType.Name);
                     entry.State = EntityState.Modified;
                     softDeletable.IsDeleted = true;
                     softDeletable.DeletedOnUtc = utcNow;
@@ -44,12 +48,14 @@ namespace Infrastructure.Persistence.Interceptors
                 {
                     if (entry.State == EntityState.Added)
                     {
+                        logger.LogDebug("Stamp created {Entity}", entry.Metadata.ClrType.Name);
                         auditable.CreatedOnUtc = utcNow;
                         auditable.CreatedBy = currentUserId;
                     }
                     
                     if (entry.State == EntityState.Modified)
                     {
+                        logger.LogDebug("Stamp modified {Entity}", entry.Metadata.ClrType.Name);
                         auditable.LastModifiedOnUtc = utcNow;
                         auditable.LastModifiedBy = currentUserId;
                     }
