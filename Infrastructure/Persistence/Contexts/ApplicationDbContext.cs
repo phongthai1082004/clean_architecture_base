@@ -1,3 +1,4 @@
+using Application.Interfaces;
 using Domain.Entities;
 using Domain.Entities.Idempotency;
 using Domain.Entities.Notifications;
@@ -6,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.Contexts
 {
-    public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : DbContext(options)
+    public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : DbContext(options), IApplicationDbContext
     {
         public DbSet<User> Users => Set<User>();
         public DbSet<UserToken> UserTokens => Set<UserToken>();
@@ -21,6 +22,11 @@ namespace Infrastructure.Persistence.Contexts
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+        }
+        public async Task<IDbTransactionContext> BeginTransactionAsync(CancellationToken cancellationToken = default)
+        {
+            var efTx = await Database.BeginTransactionAsync(cancellationToken);
+            return new EfDbTransactionContext(efTx);
         }
     }
 }

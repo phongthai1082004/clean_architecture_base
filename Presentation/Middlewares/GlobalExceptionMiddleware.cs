@@ -1,4 +1,6 @@
-﻿using Infrastructure.Logging;
+﻿using Domain.Exceptions.Common;
+using Domain.Exceptions.Idempotency;
+using Infrastructure.Logging;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
 
@@ -41,9 +43,25 @@ namespace Presentation.Middlewares
                         StatusCodes.Status400BadRequest,
                         ex.Message),
 
+                    MissingIdempotencyKeyException missingKey => (
+                        StatusCodes.Status400BadRequest,
+                        missingKey.Message),
+
                     UnauthorizedAccessException unauthorized => (
                         StatusCodes.Status403Forbidden,
                         unauthorized.Message),
+
+                    ConflictException or IdempotencyProcessingException => (
+                        StatusCodes.Status409Conflict,
+                        ex.Message),
+
+                    UnprocessableEntityException unprocessable => (
+                        StatusCodes.Status422UnprocessableEntity,
+                        unprocessable.Message),
+
+                    OperationCanceledException or TimeoutException => (
+                        StatusCodes.Status504GatewayTimeout,
+                        "The request timed out."),
 
                     _ => (
                         StatusCodes.Status500InternalServerError,

@@ -33,18 +33,14 @@ namespace Application.Behaviors
                 currentUser.Endpoint,
                 currentUser.UserId,
                 currentUser.Payload);
-
-            logger.LogDebug(
-                "Idempotency check {RequestName} key={IdempotencyKey} user={UserId} endpoint={Endpoint}",
-                typeof(TRequest).Name, idempotencyKey, currentUser.UserId, currentUser.Endpoint);
-
+            if (logger.IsEnabled(LogLevel.Debug)) logger.LogDebug("Idempotency check {RequestName} key={IdempotencyKey} user={UserId} endpoint={Endpoint}", typeof(TRequest).Name, idempotencyKey, currentUser.UserId, currentUser.Endpoint);
             var dataKey = CacheKeys.IdempotencyShortData<TRequest>(idempotencyKey, currentUser.UserId, currentUser.Endpoint);
             var lockKey = CacheKeys.IdempotencyLockData<TRequest>(idempotencyKey, currentUser.UserId, currentUser.Endpoint);
 
             var cached = await cache.GetAsync<IdempotencyCacheEntry>(dataKey);
             if (cached is not null)
             {
-                logger.LogDebug("Idempotency cache hit for {RequestName}", typeof(TRequest).Name);
+                if (logger.IsEnabled(LogLevel.Debug)) logger.LogDebug("Idempotency cache hit for {RequestName}", typeof(TRequest).Name);
 
                 if (!string.Equals(cached.RequestHash, requestHash, StringComparison.Ordinal))
                 {
@@ -68,9 +64,7 @@ namespace Application.Behaviors
                 cancellationToken);
             if (existing is not null)
             {
-                logger.LogDebug(
-                    "Idempotency DB hit for {RequestName} status={Status}",
-                    typeof(TRequest).Name, existing.Status);
+                if (logger.IsEnabled(LogLevel.Debug))  logger.LogDebug("Idempotency DB hit for {RequestName} status={Status}", typeof(TRequest).Name, existing.Status);
 
                 if (!string.Equals(existing.RequestHash, requestHash, StringComparison.Ordinal))
                 {
@@ -80,16 +74,14 @@ namespace Application.Behaviors
 
                 if (existing.Status == IdempotencyStatus.Completed)
                 {
-                    logger.LogInformation("Replaying idempotent response for {RequestName}", typeof(TRequest).Name);
+                    if (logger.IsEnabled(LogLevel.Information)) logger.LogInformation("Replaying idempotent response for {RequestName}", typeof(TRequest).Name);
                     await cache.SetAsync(dataKey, ToEntry(existing), CompletedTtl);
                     return DeserializeResponse(existing.ResponseBody);
                 }
 
                 if (existing.Status == IdempotencyStatus.Failed || existing.IsExpired())
                 {
-                    logger.LogInformation(
-                        "Resetting idempotency record for retry {RequestName} (status={Status})",
-                        typeof(TRequest).Name, existing.Status);
+                    if (logger.IsEnabled(LogLevel.Information)) logger.LogInformation("Resetting idempotency record for retry {RequestName} (status={Status})", typeof(TRequest).Name, existing.Status);
                     idempotentRepository.Delete(existing);
                     await idempotentRepository.SaveChangesAsync(cancellationToken);
                 }
@@ -107,11 +99,11 @@ namespace Application.Behaviors
 
             if (!isLocked)
             {
-                logger.LogDebug("Idempotency lock contention for {RequestName}", typeof(TRequest).Name);
+                if (logger.IsEnabled(LogLevel.Debug)) logger.LogDebug("Idempotency lock contention for {RequestName}", typeof(TRequest).Name);
                 throw new ConflictException("A request with the same idempotency key is currently being processed.");
             }
 
-            logger.LogDebug("Idempotency lock acquired for {RequestName}", typeof(TRequest).Name);
+            if (logger.IsEnabled(LogLevel.Debug))  logger.LogDebug("Idempotency lock acquired for {RequestName}", typeof(TRequest).Name);
 
             var record = new IdempotencyRecord(
                 idempotencyKey,
@@ -141,9 +133,7 @@ namespace Application.Behaviors
 
                 await cache.SetAsync(dataKey, ToEntry(record), CompletedTtl);
 
-                logger.LogInformation(
-                    "Completed idempotent request {RequestName} status={StatusCode}",
-                    typeof(TRequest).Name, statusCode);
+                if (logger.IsEnabled(LogLevel.Information))  logger.LogInformation("Completed idempotent request {RequestName} status={StatusCode}", typeof(TRequest).Name, statusCode);
 
                 return response;
             }

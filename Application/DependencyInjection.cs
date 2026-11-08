@@ -20,7 +20,6 @@ namespace Application
                 cfg.AddOpenBehavior(typeof(ValidatorBehavior<,>));
                 cfg.AddOpenBehavior(typeof(IdempotencyBehavior<,>));
                 cfg.AddOpenBehavior(typeof(TransactionBehavior<,>));
-                cfg.AddOpenBehavior(typeof(CachingBehavior<,>));
             });
 
             services.AddScoped<ICurrentUserService, CurrentUserService>();

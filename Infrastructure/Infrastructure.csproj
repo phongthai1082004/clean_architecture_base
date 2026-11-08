@@ -4,7 +4,6 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <NoWarn>$(NoWarn);NU1902;NU1903;MSB3270;NU1904;NU1503;ASPIRE002</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

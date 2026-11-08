@@ -1,5 +1,6 @@
 ﻿using Application;
 using Application.Cache.Common;
+using Application.Exceptions;
 using Application.Interfaces;
 using Domain.Abstractions.Repository;
 using Domain.Entities.Idempotency;
@@ -26,10 +27,11 @@ namespace Infrastructure
             services.AddDbContext<ApplicationDbContext>((sp, options) =>
                 options.UseNpgsql(connectionString)
                     .AddInterceptors(sp.GetRequiredService<AuditInterceptor>()));
+            services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
             services.AddScoped<IDatabaseInitializer, DatabaseInitializer>();
             services.AddScoped<ICacheService, CacheService>();
             services.AddScoped<IIdempotentRepository<IdempotencyRecord, int>, IdempotentRepository>();
-
+            services.AddSingleton<IDbExceptionTranslator, IDbExceptionTranslator>();
             // Cache
             var redisConnectionString = configuration["Redis:ConnectionString"]
                             ?? throw new MissingFieldException("Please config the damn redis connection string!");
