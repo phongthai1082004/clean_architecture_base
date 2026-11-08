@@ -16,6 +16,7 @@ namespace Infrastructure.Persistence.Configurations
             builder.Property(t => t.Provider).IsRequired();
             builder.Property(t => t.ProviderUserId).HasMaxLength(100).IsRequired();
             builder.Property(t => t.AccessToken).IsRequired();
+            builder.Property(t => t.ExpiresAt);
         }
     }
 }

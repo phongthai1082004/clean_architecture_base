@@ -1,4 +1,4 @@
-using Application.Interfaces;
+using Application.Interfaces.Database;
 using Domain.Entities;
 using Domain.Entities.Idempotency;
 using Domain.Entities.Notifications;

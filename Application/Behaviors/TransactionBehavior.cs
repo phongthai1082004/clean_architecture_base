@@ -1,6 +1,6 @@
 ﻿using Application.CQRS;
 using Application.Exceptions;
-using Application.Interfaces;
+using Application.Interfaces.Database;
 using MediatR;
 using Microsoft.Extensions.Logging;
 

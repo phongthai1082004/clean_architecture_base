@@ -1,7 +1,7 @@
 ﻿using Application;
 using Application.Cache.Common;
 using Application.Exceptions;
-using Application.Interfaces;
+using Application.Interfaces.Database;
 using Domain.Abstractions.Repository;
 using Domain.Abstractions.Repository.Common;
 using Domain.Entities.Idempotency;
@@ -23,13 +23,16 @@ namespace Infrastructure
     {
         public static IServiceCollection AddDependencyInjection(this IServiceCollection services, IConfiguration configuration)
         {
-            services.AddApplication();
+            services.AddApplication(configuration);
 
             var connectionString = PostgresConfig.BuildConnectionString(configuration) ?? throw new MissingFieldException("Please config the damn postgres connection string!");
             services.AddScoped<AuditInterceptor>();
             services.AddDbContext<ApplicationDbContext>((sp, options) =>
                 options.UseNpgsql(connectionString)
                     .AddInterceptors(sp.GetRequiredService<AuditInterceptor>()));
+            // Register check health
+            services.AddHealthChecks()
+                .AddNpgSql(connectionString, name: "myPostgres");
             services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
             services.AddScoped<IDatabaseInitializer, DatabaseInitializer>();
             services.AddScoped<ICacheService, CacheService>();
@@ -43,6 +46,8 @@ namespace Infrastructure
                 ConnectionMultiplexer.Connect(redisConnectionString));
             services.AddTransient(sp =>
                 sp.GetRequiredService<IConnectionMultiplexer>().GetDatabase());
+            // Register Repostiories
+            services.AddScoped<IUserRepository, UserRepository>();
             return services;
         }
     }

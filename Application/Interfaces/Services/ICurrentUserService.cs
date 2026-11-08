@@ -1,4 +1,4 @@
-﻿namespace Application.Interfaces
+﻿namespace Application.Interfaces.Services
 {
     /// <summary>
     /// Access to the current HTTP request identity and payload.

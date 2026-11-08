@@ -19,10 +19,10 @@ namespace Infrastructure.Repositories
             var record = await dbSet.FirstOrDefaultAsync(
                 x => x.Key == idempotencyKey && x.UserId == userId && x.Endpoint == endpoint,
                 cancellationToken);
-
-            logger.LogDebug(
-                "Idempotency lookup key={IdempotencyKey} user={UserId} endpoint={Endpoint} found={Found}",
-                idempotencyKey, userId, endpoint, record is not null);
+            if (logger.IsEnabled(LogLevel.Debug))
+                logger.LogDebug(
+                    "Idempotency lookup key={IdempotencyKey} user={UserId} endpoint={Endpoint} found={Found}",
+                    idempotencyKey, userId, endpoint, record is not null);
 
             return record;
         }

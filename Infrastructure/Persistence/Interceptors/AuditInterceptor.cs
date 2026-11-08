@@ -1,4 +1,4 @@
-﻿using Application.Interfaces;
+﻿using Application.Interfaces.Services;
 using Domain.Abstractions.Auditable;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -36,7 +36,8 @@ namespace Infrastructure.Persistence.Interceptors
             {
                 if (entry.State == EntityState.Deleted && entry.Entity is ISoftDelete softDeletable)
                 {
-                    logger.LogDebug("Soft-delete {Entity}", entry.Metadata.ClrType.Name);
+                    if(logger.IsEnabled(LogLevel.Debug))
+                        logger.LogDebug("Soft-delete {Entity}", entry.Metadata.ClrType.Name);
                     entry.State = EntityState.Modified;
                     softDeletable.IsDeleted = true;
                     softDeletable.DeletedOnUtc = utcNow;

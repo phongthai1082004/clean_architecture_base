@@ -14,8 +14,6 @@ namespace Infrastructure.Persistence.Configurations
             builder.ToTable("user_tokens");
 
             builder.Property(t => t.TokenValue).IsRequired();
-            builder.Property(t => t.DeviceInfo).HasMaxLength(500).IsRequired();
-            builder.Property(t => t.IpAddress).HasMaxLength(100).IsRequired();
             builder.Property(t => t.ExpiresAt).IsRequired();
         }
     }

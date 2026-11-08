@@ -11,6 +11,7 @@ namespace Domain.Entities.Users
         public string? PhoneNumber { get; private set; } = phoneNumber;
         public string AvatarUrl { get; private set; } = "";
         public UserStatus Status { get; private set; } = UserStatus.Unactivated;
+        public UserRole Role { get; private set; } = UserRole.User;
 
         private readonly List<UserToken> _tokens = [];
         private readonly List<ExternalToken> _externalTokens = [];
@@ -57,9 +58,9 @@ namespace Domain.Entities.Users
             Status = UserStatus.Unactivated;
         }
 
-        public UserToken AddToken(string tokenValue, TokenType type, string deviceInfo, string ipAddress, DateTime expiresAt)
+        public UserToken AddToken(string tokenValue, TokenType type, DateTimeOffset expiresAt)
         {
-            var token = new UserToken(Id, tokenValue, type, deviceInfo, ipAddress, expiresAt);
+            var token = new UserToken(Id, tokenValue, type, expiresAt);
             _tokens.Add(token);
             return token;
         }

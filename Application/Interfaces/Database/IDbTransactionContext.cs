@@ -1,4 +1,4 @@
-﻿namespace Application.Interfaces
+﻿namespace Application.Interfaces.Database
 {
     /// <summary>
     /// Explicit database transaction started through <see cref="IApplicationDbContext"/>.

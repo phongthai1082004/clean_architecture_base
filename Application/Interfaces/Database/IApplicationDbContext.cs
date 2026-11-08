@@ -1,4 +1,4 @@
-﻿namespace Application.Interfaces
+﻿namespace Application.Interfaces.Database
 {
     /// <summary>Minimal persistence abstraction so Application does not depend on EF Core.</summary>
     public interface IApplicationDbContext

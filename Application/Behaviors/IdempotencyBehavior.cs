@@ -1,6 +1,6 @@
 ﻿using Application.Cache.Common;
 using Application.CQRS;
-using Application.Interfaces;
+using Application.Interfaces.Services;
 using Domain.Abstractions.Repository;
 using Domain.Entities.Idempotency;
 using Domain.Enums;
