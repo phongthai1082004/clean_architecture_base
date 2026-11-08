@@ -11,6 +11,7 @@ builder.Host.UseSerilog((context, config) =>
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddDependencyInjection(builder.Configuration);
 builder.Services.AddControllers();
+builder.Services.AddAuthorization();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 

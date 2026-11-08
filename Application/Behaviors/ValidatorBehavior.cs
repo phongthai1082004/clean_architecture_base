@@ -4,7 +4,7 @@ using MediatR;
 namespace Application.Behaviors
 {
     public class ValidatorBehavior<TRequest, TResponse>(IEnumerable<IValidator<TRequest>> validators) : IPipelineBehavior<TRequest, TResponse>
-        where TRequest : AbstractValidator<TRequest>
+        where TRequest : notnull
     {
         public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
         {

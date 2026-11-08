@@ -1,6 +1,7 @@
 ﻿using Application.Behaviors;
 using Application.Interfaces;
 using Application.Services;
+using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Application
@@ -16,12 +17,12 @@ namespace Application
                 cfg.AddOpenBehavior(typeof(ExceptionHandlingBehavior<,>));
                 cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
                 cfg.AddOpenBehavior(typeof(PerformanceBehavior<,>));
-                cfg.AddOpenBehavior(typeof(AuthenticationBehavior<,>));
                 cfg.AddOpenBehavior(typeof(ValidatorBehavior<,>));
                 cfg.AddOpenBehavior(typeof(IdempotencyBehavior<,>));
                 cfg.AddOpenBehavior(typeof(TransactionBehavior<,>));
             });
 
+            services.AddValidatorsFromAssembly(typeof(ApplicationDependencyInjection).Assembly);
             services.AddScoped<ICurrentUserService, CurrentUserService>();
             return services;
         }

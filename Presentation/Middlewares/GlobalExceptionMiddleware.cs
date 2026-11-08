@@ -43,6 +43,10 @@ namespace Presentation.Middlewares
                         StatusCodes.Status400BadRequest,
                         ex.Message),
 
+                    FluentValidation.ValidationException validation => (
+                        StatusCodes.Status400BadRequest,
+                        string.Join("; ", validation.Errors.Select(e => e.ErrorMessage))),
+
                     MissingIdempotencyKeyException missingKey => (
                         StatusCodes.Status400BadRequest,
                         missingKey.Message),

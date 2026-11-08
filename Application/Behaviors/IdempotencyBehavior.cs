@@ -5,7 +5,7 @@ using Domain.Abstractions.Repository;
 using Domain.Entities.Idempotency;
 using Domain.Enums;
 using Domain.Enums.Idempotency;
-using Domain.Exceptions;
+using Domain.Exceptions.Common;
 using Domain.Exceptions.Idempotency;
 using MediatR;
 using Microsoft.Extensions.Logging;

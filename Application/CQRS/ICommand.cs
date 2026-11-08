@@ -2,6 +2,7 @@
 
 namespace Application.CQRS
 {
-    public interface ICommand<out TResponse> : IRequest<TResponse> { }
+    public interface IBaseCommand { }
+    public interface ICommand<out TResponse> : IRequest<TResponse>, IBaseCommand { }
     public interface ICommand : ICommand<Unit> { }
 }

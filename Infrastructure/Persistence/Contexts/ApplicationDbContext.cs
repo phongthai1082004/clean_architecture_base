@@ -14,9 +14,6 @@ namespace Infrastructure.Persistence.Contexts
         public DbSet<ExternalToken> ExternalTokens => Set<ExternalToken>();
         public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
         public DbSet<Notification> Notifications => Set<Notification>();
-        public DbSet<FileMetadata> FileMetadata => Set<FileMetadata>();
-        public DbSet<InboxMessage> InboxMessages => Set<InboxMessage>();
-        public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
         public DbSet<IdempotencyRecord> IdempotencyRecords => Set<IdempotencyRecord>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

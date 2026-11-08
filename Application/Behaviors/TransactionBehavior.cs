@@ -1,8 +1,8 @@
-﻿using Application.Exceptions;
+﻿using Application.CQRS;
+using Application.Exceptions;
 using Application.Interfaces;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using System.Windows.Input;
 
 namespace Application.Behaviors
 {
@@ -14,7 +14,7 @@ namespace Application.Behaviors
     {
         public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
         {
-            if (request is not ICommand)
+            if (request is not IBaseCommand)
                 return await next();
 
             var requestName = typeof(TRequest).Name;

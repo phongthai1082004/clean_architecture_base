@@ -13,14 +13,20 @@ namespace Infrastructure.Persistence.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "file_metadata",
+                name: "idempotency_records",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    FileName = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    FilePath = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
-                    ContentType = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    FileSize = table.Column<long>(type: "bigint", nullable: false),
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Key = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: true),
+                    Endpoint = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    RequestHash = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
+                    Status = table.Column<int>(type: "integer", nullable: false),
+                    ResponseStatusCode = table.Column<int>(type: "integer", nullable: true),
+                    ResponseBody = table.Column<string>(type: "text", nullable: true),
+                    ResponseContentType = table.Column<string>(type: "text", nullable: true),
+                    ExpiresAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     CreatedOnUtc = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     CreatedBy = table.Column<Guid>(type: "uuid", nullable: true),
                     LastModifiedOnUtc = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
@@ -28,45 +34,7 @@ namespace Infrastructure.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_file_metadata", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "inbox_messages",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    ProcessedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    Error = table.Column<string>(type: "text", nullable: true),
-                    CreatedOnUtc = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    CreatedBy = table.Column<Guid>(type: "uuid", nullable: true),
-                    LastModifiedOnUtc = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    LastModifiedBy = table.Column<Guid>(type: "uuid", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_inbox_messages", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "outbox_messages",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    EventType = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    Payload = table.Column<string>(type: "text", nullable: false),
-                    OccurredOn = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    ProcessedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    Error = table.Column<string>(type: "text", nullable: true),
-                    RetryCount = table.Column<int>(type: "integer", nullable: false),
-                    CreatedOnUtc = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    CreatedBy = table.Column<Guid>(type: "uuid", nullable: true),
-                    LastModifiedOnUtc = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    LastModifiedBy = table.Column<Guid>(type: "uuid", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_outbox_messages", x => x.Id);
+                    table.PrimaryKey("PK_idempotency_records", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -100,7 +68,7 @@ namespace Infrastructure.Persistence.Migrations
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     UserId = table.Column<Guid>(type: "uuid", nullable: true),
-                    Action = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    Action = table.Column<int>(type: "integer", nullable: false),
                     TableName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     RecordId = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     Message = table.Column<string>(type: "text", nullable: false),
@@ -128,7 +96,7 @@ namespace Infrastructure.Persistence.Migrations
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Provider = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Provider = table.Column<int>(type: "integer", nullable: false),
                     ProviderUserId = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     AccessToken = table.Column<string>(type: "text", nullable: false),
                     RefreshToken = table.Column<string>(type: "text", nullable: true),
@@ -157,7 +125,7 @@ namespace Infrastructure.Persistence.Migrations
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
                     Title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     Message = table.Column<string>(type: "text", nullable: false),
-                    Type = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Type = table.Column<int>(type: "integer", nullable: false),
                     IsRead = table.Column<bool>(type: "boolean", nullable: false),
                     CreatedOnUtc = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     CreatedBy = table.Column<Guid>(type: "uuid", nullable: true),
@@ -215,6 +183,17 @@ namespace Infrastructure.Persistence.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_idempotency_records_ExpiresAt",
+                table: "idempotency_records",
+                column: "ExpiresAt");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_idempotency_records_UserId_Endpoint_Key",
+                table: "idempotency_records",
+                columns: new[] { "UserId", "Endpoint", "Key" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_notifications_UserId",
                 table: "notifications",
                 column: "UserId");
@@ -241,16 +220,10 @@ namespace Infrastructure.Persistence.Migrations
                 name: "external_tokens");
 
             migrationBuilder.DropTable(
-                name: "file_metadata");
-
-            migrationBuilder.DropTable(
-                name: "inbox_messages");
+                name: "idempotency_records");
 
             migrationBuilder.DropTable(
                 name: "notifications");
-
-            migrationBuilder.DropTable(
-                name: "outbox_messages");
 
             migrationBuilder.DropTable(
                 name: "user_tokens");

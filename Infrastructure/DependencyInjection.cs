@@ -3,12 +3,15 @@ using Application.Cache.Common;
 using Application.Exceptions;
 using Application.Interfaces;
 using Domain.Abstractions.Repository;
+using Domain.Abstractions.Repository.Common;
 using Domain.Entities.Idempotency;
 using Infrastructure.Cache;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.Contexts;
+using Infrastructure.Persistence.Exceptions;
 using Infrastructure.Persistence.Interceptors;
 using Infrastructure.Repositories;
+using Infrastructure.Repositories.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,8 +33,9 @@ namespace Infrastructure
             services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
             services.AddScoped<IDatabaseInitializer, DatabaseInitializer>();
             services.AddScoped<ICacheService, CacheService>();
+            services.AddScoped(typeof(IBaseRepository<,>), typeof(BaseRepository<,>));
             services.AddScoped<IIdempotentRepository<IdempotencyRecord, int>, IdempotentRepository>();
-            services.AddSingleton<IDbExceptionTranslator, IDbExceptionTranslator>();
+            services.AddSingleton<IDbExceptionTranslator, DbExceptionTranslate>();
             // Cache
             var redisConnectionString = configuration["Redis:ConnectionString"]
                             ?? throw new MissingFieldException("Please config the damn redis connection string!");
