@@ -34,8 +34,8 @@ namespace Application
             // Configure JWT settings
             var jwtSection = configuration.GetSection("JwtSettings");
             services.Configure<JwtSettings>(jwtSection);
-            var jwtSettings = jwtSection.Get<JwtSettings>()
-                              ?? throw new InvalidOperationException("JwtSettings is missing in configuration.");
+            var jwtSettings = jwtSection.Get<JwtSettings>() ?? throw new InvalidOperationException("JwtSettings is missing in configuration.");
+            if (string.IsNullOrEmpty(jwtSettings.Key)) throw new InvalidOperationException("Secret key is not configured in Jwt Setting.");
             services.AddSingleton(jwtSettings);
             services.AddAuthentication(o => {
                 o.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;

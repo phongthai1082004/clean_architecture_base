@@ -16,6 +16,7 @@ namespace Infrastructure.Persistence.Configurations
             builder.Property(r => r.Key).HasMaxLength(255).IsRequired();
             builder.Property(r => r.Endpoint).HasMaxLength(500).IsRequired();
             builder.Property(r => r.RequestHash).HasMaxLength(64).IsRequired();
+            builder.Property(r => r.Status).IsRequired().HasConversion<int>();
             builder.Property(r => r.ExpiresAt).IsRequired();
 
             builder.HasIndex(r => new { r.UserId, r.Endpoint, r.Key }).IsUnique();

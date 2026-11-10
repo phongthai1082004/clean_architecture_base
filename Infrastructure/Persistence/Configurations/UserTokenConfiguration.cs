@@ -14,6 +14,7 @@ namespace Infrastructure.Persistence.Configurations
             builder.ToTable("user_tokens");
 
             builder.Property(t => t.TokenValue).IsRequired();
+            builder.Property(t => t.Type).IsRequired().HasConversion<int>();
             builder.Property(t => t.ExpiresAt).IsRequired();
         }
     }

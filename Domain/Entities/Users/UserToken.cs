@@ -20,7 +20,7 @@ namespace Domain.Entities.Users
             IsRevoked = true;
         }
 
-        public bool IsExpired() => ExpiresAt <= DateTime.UtcNow;
+        public bool IsExpired() => ExpiresAt <= DateTimeOffset.UtcNow;
         public bool IsValid() => !IsRevoked && !IsExpired();
     }
 }

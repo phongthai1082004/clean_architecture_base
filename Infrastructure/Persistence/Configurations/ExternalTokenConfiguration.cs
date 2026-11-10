@@ -13,7 +13,7 @@ namespace Infrastructure.Persistence.Configurations
 
             builder.ToTable("external_tokens");
 
-            builder.Property(t => t.Provider).IsRequired();
+            builder.Property(t => t.Provider).IsRequired().HasConversion<int>();
             builder.Property(t => t.ProviderUserId).HasMaxLength(100).IsRequired();
             builder.Property(t => t.AccessToken).IsRequired();
             builder.Property(t => t.ExpiresAt);
